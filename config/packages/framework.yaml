@@ -8,6 +8,14 @@ framework:
     #esi: true
     #fragments: true
 
+    http_client:
+        scoped_clients:
+            photon.client:
+                base_uri: '%env(PHOTON_URL)%'
+                headers:
+                    Accept: 'application/json'
+                    User-Agent: 'geo-api/%env(APP_ENV)%'
+
 when@test:
     framework:
         test: true

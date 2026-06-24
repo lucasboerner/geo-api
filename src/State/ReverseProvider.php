@@ -7,7 +7,7 @@ namespace App\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Place;
-use App\Client\PhotonClient;
+use App\Client\PhotonClientInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -19,7 +19,7 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 final readonly class ReverseProvider implements ProviderInterface
 {
     public function __construct(
-        private PhotonClient $photon,
+        private PhotonClientInterface $photon,
         private RequestStack $requestStack,
         #[Autowire(env: 'DEFAULT_LANG')]
         private string $defaultLanguage,

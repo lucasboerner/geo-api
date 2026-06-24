@@ -7,8 +7,8 @@ namespace App\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Route;
-use App\Client\OsrmClient;
-use App\Client\PhotonClient;
+use App\Client\OsrmClientInterface;
+use App\Client\PhotonClientInterface;
 use App\Dto\Coordinate;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -24,8 +24,8 @@ final readonly class RouteProvider implements ProviderInterface
     private const string COORDINATE_PATTERN = '/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/';
 
     public function __construct(
-        private PhotonClient $photon,
-        private OsrmClient $osrm,
+        private PhotonClientInterface $photon,
+        private OsrmClientInterface $osrm,
         private RequestStack $requestStack,
     ) {
     }

@@ -13,7 +13,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * @phpstan-import-type PhotonFeature from Place
  */
-final readonly class PhotonClient
+final readonly class PhotonClient implements PhotonClientInterface
 {
     public function __construct(
         private HttpClientInterface $photonClient,

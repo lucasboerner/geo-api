@@ -21,3 +21,13 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Shared cache pool: filesystem by default, Redis when ENABLE_REDIS is on.
+    geo.cache:
+        class: Symfony\Contracts\Cache\CacheInterface
+        factory: ['@App\Cache\CacheFactory', 'create']
+
+    # The cached decorators take over the concrete client service ids; these
+    # aliases make the interface resolve to the cached client for every consumer.
+    App\Client\PhotonClientInterface: '@App\Client\PhotonClient'
+    App\Client\OsrmClientInterface: '@App\Client\OsrmClient'

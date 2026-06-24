@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * @phpstan-import-type OsrmRoute from Route
  */
-final readonly class OsrmClient
+final readonly class OsrmClient implements OsrmClientInterface
 {
     public function __construct(private HttpClientInterface $osrmClient)
     {

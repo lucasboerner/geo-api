@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Place;
 use App\Client\PhotonClient;
+use App\Dto\Coordinate;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -15,9 +16,9 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 /**
  * @implements ProviderInterface<Place>
  */
-final readonly class GeocodeProvider implements ProviderInterface
+final readonly class AutocompleteProvider implements ProviderInterface
 {
-    private const int DEFAULT_LIMIT = 5;
+    private const int DEFAULT_LIMIT = 8;
 
     public function __construct(
         private PhotonClient $photon,
@@ -44,6 +45,13 @@ final readonly class GeocodeProvider implements ProviderInterface
             $limit = self::DEFAULT_LIMIT;
         }
 
-        return $this->photon->geocode($query, null, $limit);
+        $bias = null;
+        $lat = $request?->query->get('lat');
+        $lon = $request?->query->get('lon');
+        if (null !== $lat && null !== $lon) {
+            $bias = new Coordinate((float) $lat, (float) $lon);
+        }
+
+        return $this->photon->geocode($query, $bias, $limit);
     }
 }

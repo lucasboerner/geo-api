@@ -10,6 +10,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @phpstan-import-type PhotonFeature from Place
+ */
 final readonly class PhotonClient
 {
     public function __construct(
@@ -21,6 +24,7 @@ final readonly class PhotonClient
 
     /**
      * @return array<Place>
+     *
      * @throws ExceptionInterface
      */
     public function geocode(string $query, ?Coordinate $bias, int $limit): array
@@ -31,13 +35,32 @@ final readonly class PhotonClient
             $parameters['lon'] = $bias->lon;
         }
 
+        /** @var array{features?: list<PhotonFeature>} $data */
         $data = $this->photonClient
             ->request('GET', '/api', ['query' => $parameters])
             ->toArray();
 
         return array_map(
-            fn (array $place): Place => Place::fromArray($place),
+            static fn (array $place): Place => Place::fromArray($place),
             $data['features'] ?? [],
         );
+    }
+
+    /**
+     * @throws ExceptionInterface
+     */
+    public function reverse(float $lat, float $lon, string $lang): ?Place
+    {
+        /** @var array{features?: list<PhotonFeature>} $data */
+        $data = $this->photonClient
+            ->request('GET', '/reverse', ['query' => ['lat' => $lat, 'lon' => $lon, 'lang' => $lang]])
+            ->toArray();
+
+        $features = $data['features'] ?? [];
+        if ([] === $features) {
+            return null;
+        }
+
+        return Place::fromArray($features[0]);
     }
 }

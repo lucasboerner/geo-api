@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Place;
 use App\Client\PhotonClient;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -15,35 +16,29 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 /**
  * @implements ProviderInterface<Place>
  */
-final readonly class GeocodeProvider implements ProviderInterface
+final readonly class ReverseProvider implements ProviderInterface
 {
-    private const int DEFAULT_LIMIT = 5;
-
     public function __construct(
         private PhotonClient $photon,
         private RequestStack $requestStack,
+        #[Autowire(env: 'DEFAULT_LANG')]
+        private string $defaultLanguage,
     ) {
     }
 
     /**
-     * @return Place[]
-     *
      * @throws ExceptionInterface
      */
-    public function provide(Operation $operation, array $uriVariables = [], array $context = []): array
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): ?Place
     {
         $request = $this->requestStack->getCurrentRequest();
 
-        $query = trim((string) $request?->query->get('query', ''));
-        if ('' === $query) {
-            throw new BadRequestHttpException('Query parameter "query" is required.');
+        $lat = $request?->query->get('lat');
+        $lon = $request?->query->get('lon');
+        if (null === $lat || null === $lon) {
+            throw new BadRequestHttpException('Query parameters "lat" and "lon" are required.');
         }
 
-        $limit = (int) $request?->query->get('limit', self::DEFAULT_LIMIT);
-        if ($limit < 1) {
-            $limit = self::DEFAULT_LIMIT;
-        }
-
-        return $this->photon->geocode($query, null, $limit);
+        return $this->photon->reverse((float) $lat, (float) $lon, $this->defaultLanguage);
     }
 }

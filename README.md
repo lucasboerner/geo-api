@@ -1,4 +1,4 @@
-# geo-microservice
+# GEO Microservice
 
 A self-hostable **geocoding + routing gateway**: it bundles
 [Photon](https://github.com/komoot/photon) (forward/reverse geocoding and
@@ -56,17 +56,40 @@ for a while before serving — that is expected, not a hang. Watch progress with
 docker compose logs -f photon osrm-init
 ```
 
-What happens, and what it costs:
+What happens: **Photon** downloads a *prebuilt* index for the region, and
+**OSRM** (the one-shot `osrm-init` container) downloads the Geofabrik
+`.osm.pbf` extract and then **builds** the routing graph (`osrm-extract` →
+`osrm-partition` → `osrm-customize`). The OSRM build is the **RAM and CPU peak
+of the whole stack** — and it is **one-time**. Size the box for that peak; once
+the data volumes are populated the service runs comfortably on far less.
 
-- **Photon** downloads a *prebuilt* index for the region. A single country is in
-  the **low tens of GB** on disk (check the current size on the index server);
-  continents are far larger.
-- **OSRM** downloads the Geofabrik `.osm.pbf` extract and then **builds** the
-  routing graph (`osrm-extract` → `osrm-partition` → `osrm-customize`). This is
-  **CPU- and RAM-heavy** and one-time. A country like Germany needs several GB of
-  free RAM and disk for the build; larger extracts (a continent, or `planet`)
-  need **substantially more disk and RAM** — budget a much bigger box.
-- **Serving** a country graph afterwards is modest; serving Europe/planet is not.
+### Server sizing (default `REGION=de`, Germany)
+
+| Resource | First boot (one-time build) | Steady-state serving |
+|---|---|---|
+| **RAM** | **~24 GB recommended.** The `osrm-init` build peaked at **~17 GB** for Germany; leave headroom — nothing sets a `mem_limit`, so the host must really have it. 16 GB is marginal. | ~2–4 GB (Photon JVM + OSRM graph + PHP/Caddy) |
+| **CPU** | 2 cores minimum; `osrm-extract`/`osrm-partition` use all cores, so more cores shorten the (still lengthy) build. | 1–2 cores handle modest traffic |
+| **Disk** | **~40 GB free.** Photon index (low tens of GB) + the OSRM `.osm.pbf` (kept after the build, ~1.5 GB for DE) + the built `.osrm*` graph (a few GB) + images. | grows only with the Redis cache, if enabled |
+
+Only the **~17 GB RAM peak is measured**; the other figures are recommended
+headroom — treat them as a floor, not a ceiling.
+
+> **Reference build.** On a 14-core Apple Silicon host with 48 GB RAM, the
+> Germany (`REGION=de`) first boot finished in **~30 minutes** (RAM peaked
+> ~17 GB). The build is CPU- and I/O-bound; the GPU is **not** used by Photon or
+> OSRM, so GPU core count is irrelevant. Expect longer on fewer/slower cores or
+> a slower download link.
+
+**Larger regions cost much more.** Small countries (AT, CH, BE, …) are lighter
+than Germany; a continent (`europe`) or `planet` needs **far more — tens of GB
+of RAM for the build and 100 GB+ of disk** — so provision a much bigger box and
+expect a much longer first boot. See [the coverage rule](#the-coverage-rule-region-drives-both-backends)
+for what each `REGION` pulls in.
+
+The build is **skipped on every later boot** (the `osrm-init` container writes a
+`.osrm-build-complete` marker), so a smaller steady-state box is fine once the
+volumes exist. Changing `REGION` re-triggers the full peak — see the rebuild
+note below.
 
 Both datasets are stored in named volumes (`photon_data`, `osrm_data`), so
 **subsequent boots are fast** — the import is skipped. To rebuild for a new

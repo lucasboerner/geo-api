@@ -22,23 +22,21 @@ final readonly class CachedPhotonClient implements PhotonClientInterface
         private CacheInterface $cache,
         #[Autowire(env: 'int:CACHE_TTL')]
         private int $ttl,
-        #[Autowire(env: 'DEFAULT_LANG')]
-        private string $defaultLanguage,
     ) {
     }
 
     /**
      * @return array<Place>
      */
-    public function geocode(string $query, ?Coordinate $bias, int $limit): array
+    public function geocode(string $query, ?Coordinate $bias, int $limit, string $lang): array
     {
         /** @var array<Place> $places */
         $places = $this->cache->get(
-            key: $this->geocodeKey($query, $bias, $limit),
-            callback: function (ItemInterface $item) use ($query, $bias, $limit): array {
+            key: $this->geocodeKey($query, $bias, $limit, $lang),
+            callback: function (ItemInterface $item) use ($query, $bias, $limit, $lang): array {
                 $item->expiresAfter($this->ttl);
 
-                return $this->inner->geocode($query, $bias, $limit);
+                return $this->inner->geocode($query, $bias, $limit, $lang);
             },
         );
 
@@ -60,10 +58,10 @@ final readonly class CachedPhotonClient implements PhotonClientInterface
         return $place;
     }
 
-    private function geocodeKey(string $query, ?Coordinate $bias, int $limit): string
+    private function geocodeKey(string $query, ?Coordinate $bias, int $limit, string $lang): string
     {
         $biasKey = null === $bias ? 'none' : sprintf('%.5f,%.5f', $bias->lat, $bias->lon);
-        $raw = implode('|', [$this->defaultLanguage, $limit, $biasKey, $this->normalize($query)]);
+        $raw = implode('|', [$lang, $limit, $biasKey, $this->normalize($query)]);
 
         return 'geocode.'.hash('xxh128', $raw);
     }

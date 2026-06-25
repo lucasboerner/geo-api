@@ -9,6 +9,7 @@ use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Place;
 use App\Client\PhotonClientInterface;
 use App\Dto\Coordinate;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -23,6 +24,8 @@ final readonly class AutocompleteProvider implements ProviderInterface
     public function __construct(
         private PhotonClientInterface $photon,
         private RequestStack $requestStack,
+        #[Autowire(env: 'DEFAULT_LANG')]
+        private string $defaultLanguage,
     ) {
     }
 
@@ -52,6 +55,8 @@ final readonly class AutocompleteProvider implements ProviderInterface
             $bias = new Coordinate((float) $lat, (float) $lon);
         }
 
-        return $this->photon->geocode($query, $bias, $limit);
+        $lang = trim((string) $request?->query->get('lang', '')) ?: $this->defaultLanguage;
+
+        return $this->photon->geocode($query, $bias, $limit, $lang);
     }
 }

@@ -15,7 +15,7 @@ interface PhotonClientInterface
      *
      * @throws ExceptionInterface
      */
-    public function geocode(string $query, ?Coordinate $bias, int $limit): array;
+    public function geocode(string $query, ?Coordinate $bias, int $limit, string $lang): array;
 
     /**
      * @throws ExceptionInterface

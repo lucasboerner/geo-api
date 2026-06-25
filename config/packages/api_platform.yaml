@@ -8,6 +8,12 @@ api_platform:
             - application/json
         html:
             - text/html
+    error_formats:
+        jsonproblem:
+            - application/problem+json
+        json:
+            - application/problem+json
+            - application/json
     enable_swagger_ui: false
     enable_re_doc: false
     enable_scalar: true

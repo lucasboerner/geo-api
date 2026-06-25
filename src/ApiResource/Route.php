@@ -6,6 +6,7 @@ namespace App\ApiResource;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\QueryParameter;
 use App\Dto\Coordinate;
 use App\State\RouteProvider;
 
@@ -18,6 +19,11 @@ use App\State\RouteProvider;
         new Get(
             uriTemplate: '/route',
             provider: RouteProvider::class,
+            parameters: [
+                'from' => new QueryParameter(schema: ['type' => 'string'], description: 'Required. Origin as "lat,lon" or an address to geocode.'),
+                'to' => new QueryParameter(schema: ['type' => 'string'], description: 'Required. Destination as "lat,lon" or an address to geocode.'),
+                'lang' => new QueryParameter(schema: ['type' => 'string'], description: 'Language used when geocoding addresses (defaults to DEFAULT_LANG).'),
+            ],
         ),
     ],
 )]

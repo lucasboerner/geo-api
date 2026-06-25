@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Place;
 use App\Client\PhotonClientInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -22,6 +23,8 @@ final readonly class GeocodeProvider implements ProviderInterface
     public function __construct(
         private PhotonClientInterface $photon,
         private RequestStack $requestStack,
+        #[Autowire(env: 'DEFAULT_LANG')]
+        private string $defaultLanguage,
     ) {
     }
 
@@ -44,6 +47,8 @@ final readonly class GeocodeProvider implements ProviderInterface
             $limit = self::DEFAULT_LIMIT;
         }
 
-        return $this->photon->geocode($query, null, $limit);
+        $lang = trim((string) $request?->query->get('lang', '')) ?: $this->defaultLanguage;
+
+        return $this->photon->geocode($query, null, $limit, $lang);
     }
 }

@@ -39,6 +39,8 @@ final readonly class ReverseProvider implements ProviderInterface
             throw new BadRequestHttpException('Query parameters "lat" and "lon" are required.');
         }
 
-        return $this->photon->reverse((float) $lat, (float) $lon, $this->defaultLanguage);
+        $lang = trim((string) $request->query->get('lang', '')) ?: $this->defaultLanguage;
+
+        return $this->photon->reverse((float) $lat, (float) $lon, $lang);
     }
 }

@@ -6,7 +6,6 @@ namespace App\Client;
 
 use App\ApiResource\Place;
 use App\Dto\Coordinate;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -17,8 +16,6 @@ final readonly class PhotonClient implements PhotonClientInterface
 {
     public function __construct(
         private HttpClientInterface $photonClient,
-        #[Autowire(env: 'DEFAULT_LANG')]
-        private string $defaultLanguage,
     ) {
     }
 
@@ -27,9 +24,9 @@ final readonly class PhotonClient implements PhotonClientInterface
      *
      * @throws ExceptionInterface
      */
-    public function geocode(string $query, ?Coordinate $bias, int $limit): array
+    public function geocode(string $query, ?Coordinate $bias, int $limit, string $lang): array
     {
-        $parameters = ['q' => $query, 'lang' => $this->defaultLanguage, 'limit' => $limit];
+        $parameters = ['q' => $query, 'lang' => $lang, 'limit' => $limit];
         if (null !== $bias) {
             $parameters['lat'] = $bias->lat;
             $parameters['lon'] = $bias->lon;

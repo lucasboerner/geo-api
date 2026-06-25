@@ -1,7 +1,7 @@
 ---
 # Production environment override
 services:
-  php:
+  gateway:
     image: ${IMAGES_PREFIX:-}app-php-prod
     build:
       context: .
